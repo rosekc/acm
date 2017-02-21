@@ -17,7 +17,7 @@ int main()
     }
     for (int i = 0; i < n; i++)
     {
-        if (nextt - ed >= ed) break;
+        if (nextt + sp > ed) break;
         if (d[i] > nextt)
         {
             re = nextt;
@@ -27,7 +27,7 @@ int main()
         else
         {
             long long t = nextt - (d[i] - 1);
-            if (mint > t && ed - d[i] + 1 >= sp) mint = t, re = d[i] - 1;
+            if (mint > t) mint = t, re = d[i] - 1;
             //printf("%lld %lld\n",re, t);
             nextt += sp;
             while (d[i] == d[i + 1]) nextt += sp, i++;
