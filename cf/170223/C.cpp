@@ -11,8 +11,6 @@ map<long long, long long> m;
 vector<long long> kn;
 int main()
 {
-    //freopen("in.txt", "r", stdin);
-    //freopen("out.txt", "w", stdout);
     int n, k, t;
     scanf("%d%d", &n, &k);
     long long tt = 1;
