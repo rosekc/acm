@@ -30,9 +30,10 @@ int main()
         long long ans = 0;
         for (int i = 1; i <= n; i++)
         {
+            long long tmp = (bd[i].size() - 1);
             for (auto j : bd[i])
             {
-                ans += (gd[j] - 1) * (bd[i].size() - 1);
+                ans += (gd[j] - 1) * tmp;
             }
         }
         printf("%lld\n", ans * 2);
