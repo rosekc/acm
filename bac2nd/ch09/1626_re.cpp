@@ -62,12 +62,9 @@ int main() {
         gets(in);
         gets(in);
         int len = strlen(in);
-        if (len == 0) {
-            puts("");
-            continue;
-        }
         dp(0, len - 1);
         print(0, len - 1);
         cout << endl;
+        if (T) cout << endl;
     }
 }
