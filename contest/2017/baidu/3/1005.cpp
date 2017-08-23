@@ -4,103 +4,109 @@
 #include <bits/stdc++.h>
 
 using namespace std;
-const int N = 6000;
-const int MAXN = 6000;
-const int MAXM = 60000;
-const int INF = (1 << 30) - 1;
+const int MAXN = 600;
+const int MAXM = 100005;
+const long long INF = 0x3f3f3f3f3f3f3f3f;
 struct Edge {
-    int from, to, cap, flow, cost;
-    Edge(int u, int v, int ca, int f, int co): from(u), to(v), cap(ca), flow(f), cost(co) {};
-};
-
-struct MCMF {
-    int n, m, s, t;
-    vector<Edge> edges;
-    vector<int> G[N];
-    int inq[N];//是否在队列中
-    int d[N];//距离
-    int p[N];//上一条弧
-    int a[N];//可改进量
-
-    void init(int n) { //初始化
-        this->n = n;
-        for (int i = 0; i < n; i++)
-            G[i].clear();
-        edges.clear();
+    int to, next;
+    long long cap, flow, cost;
+} edge[MAXM];
+int head[MAXN], tol;
+int pre[MAXN];
+long long dis[MAXN];
+bool vis[MAXN];
+int N;//节点总个数，节点编号从0~N-1
+void init(int n) {
+    N = n;
+    tol = 0;
+    memset(head, -1, sizeof(head));
+}
+void addedge(int u, int v, int cap, int cost) {
+    edge[tol].to = v;
+    edge[tol].cap = cap;
+    edge[tol].cost = cost;
+    edge[tol].flow = 0;
+    edge[tol].next = head[u];
+    head[u] = tol++;
+    edge[tol].to = u;
+    edge[tol].cap = 0;
+    edge[tol].cost = -cost;
+    edge[tol].flow = 0;
+    edge[tol].next = head[v];
+    head[v] = tol++;
+}
+bool spfa(int s, int t) {
+    queue<int>q;
+    for (int i = 0; i < N; i++) {
+        dis[i] = INF;
+        vis[i] = false;
+        pre[i] = -1;
     }
-
-    void addedge(int from, int to, int cap, int cost) { //加边
-        edges.push_back(Edge(from, to, cap, 0, cost));
-        edges.push_back(Edge(to, from, 0, 0, -cost));
-        int m = edges.size();
-        G[from].push_back(m - 2);
-        G[to].push_back(m - 1);
-    }
-
-    bool SPFA(int s, int t, int &flow, int &cost) { //寻找最小费用的增广路，使用引用同时修改原flow,cost
-        for (int i = 0; i < n; i++)
-            d[i] = INF;
-        memset(inq, 0, sizeof(inq));
-        d[s] = 0;
-        inq[s] = 1;
-        p[s] = 0;
-        a[s] = INF;
-        queue<int> Q;
-        Q.push(s);
-        while (!Q.empty()) {
-            int u = Q.front();
-            Q.pop();
-            inq[u]--;
-            for (int i = 0; i < G[u].size(); i++) {
-                Edge& e = edges[G[u][i]];
-                if (e.cap > e.flow && d[e.to] > d[u] + e.cost) { //满足可增广且可变短
-                    d[e.to] = d[u] + e.cost;
-                    p[e.to] = G[u][i];
-                    a[e.to] = min(a[u], e.cap - e.flow);
-                    if (!inq[e.to]) {
-                        inq[e.to]++;
-                        Q.push(e.to);
-                    }
+    dis[s] = 0;
+    vis[s] = true;
+    q.push(s);
+    while (!q.empty()) {
+        int u = q.front();
+        q.pop();
+        vis[u] = false;
+        for (int i = head[u]; i != -1; i = edge[i].next) {
+            int v = edge[i].to;
+            if (edge[i].cap > edge[i].flow &&
+                    dis[v] > dis[u] + edge[i].cost ) {
+                dis[v] = dis[u] + edge[i].cost;
+                pre[v] = i;
+                if (!vis[v]) {
+                    vis[v] = true;
+                    q.push(v);
                 }
             }
         }
-        if (d[t] == INF) return false; //汇点不可达则退出
-        flow += a[t];
-        cost += d[t] * a[t];
-        int u = t;
-        while (u != s) { //更新正向边和反向边
-            edges[p[u]].flow += a[t];
-            edges[p[u] ^ 1].flow -= a[t];
-            u = edges[p[u]].from;
+    }
+    if (pre[t] == -1)return false;
+    else return true;
+}
+//返回的是最大流，cost存的是最小费用
+int minCostMaxflow(int s, int t, long long &cost) {
+    long long flow = 0;
+    cost = 0;
+    while (spfa(s, t)) {
+        if (dis[t] >= 0) break;
+        long long Min = INF;
+        for (int i = pre[t]; i != -1; i = pre[edge[i ^ 1].to]) {
+            if (Min > edge[i].cap - edge[i].flow)
+                Min = edge[i].cap - edge[i].flow;
         }
-        return true;
+        for (int i = pre[t]; i != -1; i = pre[edge[i ^ 1].to]) {
+            edge[i].flow += Min;
+            edge[i ^ 1].flow -= Min;
+            cost += edge[i].cost * Min;
+        }
+        flow += Min;
     }
-
-    int MincotMaxflow(int s, int t) {
-        int flow = 0, cost = 0;
-        while (SPFA(s, t, flow, cost));
-        return cost;
-    }
-};
+    return flow;
+}
 int main() {
+    //cout << INF;
+    ios::sync_with_stdio(0);
+    cin.tie(0);
     int n, m, a, b, c, d;
     int s = 0, t;
-    MCMF mc;
     while (cin >> n >> m) {
         t = n + 1;
-        mc.init(t + 1);
+        init(t + 1);
         for (int i = 1; i <= n; i++) {
             cin >> a >> b >> c >> d;
-            mc.addedge(s, i, b, a);
-            mc.addedge(i, t, d, -c);
+            addedge(s, i, b, a);
+            addedge(i, t, d, -c);
         }
         for (int i = 1; i <= m; i++) {
             int x, y, k;
             cin >> x >> y >> k;
-            mc.addedge(x, y, INF, k);
-            mc.addedge(y, x, INF, k);
+            addedge(x, y, INF, k);
+            addedge(y, x, INF, k);
         }
-        cout << -mc.MincotMaxflow(s, t) << endl;
+        long long c;
+        minCostMaxflow(s, t, c);
+        cout << -c << endl;
     }
-    return 0;
 }
