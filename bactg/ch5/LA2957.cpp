@@ -1,14 +1,12 @@
-// 2017-09-27 19:37:35
-// LA2531
+//2017-10-11-23.08
+//LA 2957
 
 #include <bits/stdc++.h>
+
 using namespace std;
 
-const int maxn = 27;
-int w[maxn], d[maxn], a[maxn][maxn];
-
-const int MAXN = 1000;  //点数的最大值
-const int MAXM = 20010;  //边数的最大值
+const int MAXN = 6000;  //点数的最大值
+const int MAXM = 100100;  //边数的最大值
 const int INF = 0x3f3f3f3f;
 struct Edge {
     int to, next, cap, flow;
@@ -38,7 +36,7 @@ void addedge(int u, int v, int w, int rw = 0) {
 }
 //输入参数：起点、终点、点的总数
 //点的编号没有影响，只要输入点的总数
-int sap(int start, int end, int N, int c = INF) {
+int sap(int start, int end, int N, int c) {
     memset(gap, 0, sizeof(gap));
     memset(dep, 0, sizeof(dep));
     memcpy(cur, head, sizeof(head));
@@ -92,56 +90,69 @@ int sap(int start, int end, int N, int c = INF) {
     }
     return ans;
 }
-int n;
-int id(int u, int v) {
-    return (u - 1) * n + v;
-}
-int id(int u) {
-    return n * n + u;
-}
 
-bool ok(int i) {
-    int sum = w[i];
-    int t = n * (n + 1) + 1;
-    int maxflow = 0;
-    init(t + 1);
-    for (int j = 1; j <= n; j++) sum += a[i][j];
-    for (int j = 1; j <= n; j++) {
-        if (sum < w[j]) return 0;
-    }
-    for (int u = 1; u <= n; u++) {
-        for (int v = u + 1; v <= n; v++) {
-            addedge(0, id(u, v), a[u][v]);
-            addedge(id(u, v), id(u), INF);
-            addedge(id(u, v), id(v), INF);
-            maxflow += a[u][v];
-        }
-        if (sum > w[u]) addedge(id(u), t, sum - w[u]);
-    }
-    //cout << maxflow << endl;
-    return (maxflow == sap(0, t, t + 1));
-}
+const int maxm = 210;
+int u[maxm], v[maxm];
+
 int main() {
     ios::sync_with_stdio(false);
     cin.tie(0);
-    int T;
-    cin >> T;
-    while (T--) {
-        cin >> n;
-        for (int i = 1; i <= n; i++) cin >> w[i] >> d[i];
-        for (int i = 1; i <= n; i++) {
-            for (int j = 1; j <= n; j++) {
-                cin >> a[i][j];
-            }
+    int n, m, k, s, t;
+    while (cin >> n >> m >> k >> s >> t) {
+        init();
+        //k = 3;
+        for (int i = 0; i < m; i++) {
+            cin >> u[i] >> v[i];
         }
-        bool first = 1;
-        for (int i = 1; i <= n; i++) {
-            if (ok(i)) {
-                if (!first) cout << ' ';
-                cout << i;
-                first = 0;
+        int day = 1, flow = 0;
+        for (;;) {
+            for (int i = 1; i <= n; i++) {
+                addedge((day - 1) * n + i, day * n + i, INF);
             }
+            for (int i = 0; i < m; i++) {
+                addedge((day - 1) * n + u[i], day * n + v[i], 1);
+                addedge((day - 1) * n + v[i], day * n + u[i], 1);
+            }
+            flow += sap(s, t + day * n, t + day * n + 1, k - flow);
+            //cout << flow << endl;
+            if (k == flow) break;
+            day++;
         }
-        cout << endl;
+        cout << day << endl;
+        vector<int> pos(k, s);
+        int idx = 0;
+        for (int i = 1; i <= day; i++) {
+            vector<int> f, t;
+            idx += 2 * n;
+            for (int j = 0; j < m; j++) {
+                int f1 = edge[idx].flow;
+                idx += 2;
+                int f2 = edge[idx].flow;
+                idx += 2;
+                //cout << f1 << " " << f2 << " " << u[j] << endl;
+                if (f1 == 1 && f2 == 0) {
+                    f.push_back(u[j]);
+                    t.push_back(v[j]);
+                }
+                if (f1 == 0 && f2 == 1) {
+                    f.push_back(v[j]);
+                    t.push_back(u[j]);
+                }
+            }
+            //cout << idx << " " << tol << endl;
+            cout << f.size();
+            vector<bool> moved(k, 0);
+            for (int j = 0; j < f.size(); j++) {
+                for (int p = 0; p < k; p++) {
+                    if (!moved[p] && f[j] == pos[p]) {
+                        cout << ' ' << p + 1 << ' ' << t[j];
+                        pos[p] = t[j];
+                        moved[p] = 1;
+                        break;
+                    }
+                }
+            }
+            cout << endl;
+        }
     }
 }

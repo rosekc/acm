@@ -4,12 +4,12 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-const int MAXN = 105;  //ç‚¹æ•°çš„æœ€å¤§å€¼
-const int MAXM = 400010;  //è¾¹æ•°çš„æœ€å¤§å€¼
+const int MAXN = 105;  //µãÊıµÄ×î´óÖµ
+const int MAXM = 400010;  //±ßÊıµÄ×î´óÖµ
 const int INF = 0x3f3f3f3f;
 struct Edge {
     int to, next, cap, flow;
-} edge[MAXM];  //æ³¨æ„æ˜¯MAXM
+} edge[MAXM];  //×¢ÒâÊÇMAXM
 int tol;
 int head[MAXN];
 vector<int> G[MAXN];
@@ -19,7 +19,7 @@ void init(int n) {
     memset(head, -1, sizeof(head));
     for (int i = 0; i < n; i++) G[i].clear();
 }
-//åŠ è¾¹ï¼Œå•å‘å›¾ä¸‰ä¸ªå‚æ•°ï¼ŒåŒå‘å›¾å››ä¸ªå‚æ•°
+//¼Ó±ß£¬µ¥ÏòÍ¼Èı¸ö²ÎÊı£¬Ë«ÏòÍ¼ËÄ¸ö²ÎÊı
 void addedge(int u, int v, int w, int rw = 0) {
     edge[tol].to = v;
     edge[tol].cap = w;
@@ -33,8 +33,8 @@ void addedge(int u, int v, int w, int rw = 0) {
     edge[tol].flow = 0;
     head[v] = tol++;
 }
-//è¾“å…¥å‚æ•°ï¼šèµ·ç‚¹ã€ç»ˆç‚¹ã€ç‚¹çš„æ€»æ•°
-//ç‚¹çš„ç¼–å·æ²¡æœ‰å½±å“ï¼Œåªè¦è¾“å…¥ç‚¹çš„æ€»æ•°
+//ÊäÈë²ÎÊı£ºÆğµã¡¢ÖÕµã¡¢µãµÄ×ÜÊı
+//µãµÄ±àºÅÃ»ÓĞÓ°Ïì£¬Ö»ÒªÊäÈëµãµÄ×ÜÊı
 int sap(int start, int end, int N, int c) {
     memset(gap, 0, sizeof(gap));
     memset(dep, 0, sizeof(dep));
@@ -87,29 +87,87 @@ int sap(int start, int end, int N, int c) {
     return ans;
 }
 bool vis[MAXN];
-void bfs() {
+void bfs(int t) {
     memset(vis, 0, sizeof vis);
     queue<int> q;
-    q.push()
+    q.push(t);
+    vis[t] = 1;
+    while (!q.empty()) {
+        int c = q.front();
+        q.pop();
+        for (int p = head[c]; p != -1; p = edge[p].next) {
+            Edge &e = edge[p ^ 1];
+            int from = edge[p].to;
+            if (!vis[from] && e.cap > e.flow) {
+                vis[from] = 1;
+                q.push(from);
+            }
+        }
+    }
 }
-
+vector<int> min_cut(int t) {
+    bfs(t);
+    vector<int> res;
+    for (int i = 0; i < tol; i++) {
+        Edge &e = edge[i];
+        int from = edge[i^1].to;
+        if (!vis[from] && vis[e.to] && e.cap > 0) {
+            res.push_back(i);
+        }
+    }
+    return res;
+}
+void cls() {
+    for (int i = 0; i < tol; i++) {
+        edge[i].flow = 0;
+    }
+}
+bool cmp(int a, int b) {
+    if (edge[a^1].to == edge[b^1].to) {
+        return edge[a].to < edge[b].to;
+    }
+    return edge[a^1].to < edge[b^1].to;
+}
 int main() {
     ios::sync_with_stdio(0);
     cin.tie(0);
     int n, e, c, u, v, cap;
     int kase = 1;
     while (cin >> n >> e >> c && n) {
-        init();
+        init(n + 1);
         for (int i = 0; i < e; i++) {
             cin >> u >> v >> cap;
             addedge(u, v, cap);
         }
-        int ans = sap(1, n, n + 1, c);
+        int f = sap(1, n, n + 1, c);
         cout << "Case " << kase++ << ": ";
-        if (ans >= c) {
-            cout << "possible"
+        if (f >= c) {
+            cout << "possible" << endl;
             continue;
         }
-        
+        auto cut = min_cut(n);
+        for (int i = 0; i < tol; i++) {
+            edge[i].cap -= edge[i].flow;
+        }
+        vector<int> ans;
+        for (int i : cut) {
+            cls();
+            edge[i].cap = c;
+            if (sap(1, n, n + 1, c) + f >= c) {
+                ans.push_back(i);
+            }
+            edge[i].cap = 0;
+        }
+        if (ans.empty()) {
+            cout << "not possible" << endl;
+        }else {
+            sort(ans.begin(), ans.end(), cmp);
+            cout << "possible option:("
+                << edge[ans[0]^1].to << ',' << edge[ans[0]].to << ')';
+            for (int i = 1; i < ans.size(); i++) {
+                cout << ",(" << edge[ans[i]^1].to << ',' << edge[ans[i]].to << ')';
+            }
+            cout << endl;
+        }
     }
 }

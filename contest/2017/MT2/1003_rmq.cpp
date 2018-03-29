@@ -2,9 +2,7 @@
 //1003
 
 #include <bits/stdc++.h>
-#pragma comment(linker, "/STACK:1024000000,1024000000")
 using namespace std;
-
 
 const int maxn = 250000 + 10, mod = 1e9 + 7;
 const int maxj = log2(maxn) + 1;
@@ -15,11 +13,7 @@ int init() {
         d[i][0] -= i;
     }
     for (int j = 1; (1 << j) <= n; j++) {
-        for (int i = 1; i + j - 1 <= n; i++) {
-            if (j >= maxj || i + (1 << (j - 1)) >= maxn) {
-                //cout << "fuck";
-                continue;
-            }
+        for (int i = 1; i + (1<<j) - 1 <= n; i++) {
             d[i][j] = max(d[i][j - 1], d[i + (1 << (j - 1))][j - 1]);
         }
     }
@@ -27,10 +21,6 @@ int init() {
 int query(int L, int R) {
     int k = 0;
     while ((1 << (k + 1)) <= R - L + 1) k++;
-    if (k >= maxj || R - (1 << k) + 1 >= maxn) {
-        //cout << "fuck";
-        return 1;
-    }
     return max(d[L][k], d[R - (1 << k) + 1][k]);
 }
 
